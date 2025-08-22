@@ -1,8 +1,9 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException,Body
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import google.generativeai as genai
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -24,6 +25,28 @@ import pickle
 import warnings
 warnings.filterwarnings('ignore')
 
+# Load Gemini API key
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+else:
+    print("⚠️ No GEMINI_API_KEY found in .env")
+    
+def ask_gemini(prompt: str) -> str:
+    try:
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"❌ AI Chat error: {str(e)}"
+    
+    
+app = FastAPI()
+@app.post("/chat")
+async def chat_with_ai(prompt: str = Body(..., embed=True)):
+    answer = ask_gemini(prompt)
+    return {"prompt": prompt, "response": answer}
+    
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
