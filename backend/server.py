@@ -1,12 +1,12 @@
-from fastapi import FastAPI, APIRouter, HTTPException,Body
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import FastAPI, APIRouter, HTTPException,Body# type: ignore
+from dotenv import load_dotenv# type: ignore
+from starlette.middleware.cors import CORSMiddleware# type: ignore
+from motor.motor_asyncio import AsyncIOMotorClient# type: ignore
 import os
-import google.generativeai as genai
+import google.generativeai as genai# type: ignore
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field# type: ignore
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timedelta
@@ -14,13 +14,13 @@ import asyncio
 import json
 import random
 import math
-import numpy as np
-import pandas as pd
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+import numpy as np# type: ignore
+import pandas as pd# type: ignore
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor# type: ignore  
+from sklearn.linear_model import LinearRegression# type: ignore
+from sklearn.preprocessing import StandardScaler# type: ignore
+from sklearn.model_selection import train_test_split# type: ignore
+from sklearn.metrics import mean_absolute_error, mean_squared_error# type: ignore
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
@@ -46,6 +46,27 @@ app = FastAPI()
 async def chat_with_ai(prompt: str = Body(..., embed=True)):
     answer = ask_gemini(prompt)
     return {"prompt": prompt, "response": answer}
+
+# Optional Emergent AI Chat Initialization
+try:
+    from emergentintegrations.llm.chat import LLMChat  # type: ignore
+    llm_chat = LLMChat()
+    ai_chat_enabled = True
+    print("Emergent AI Chat enabled")
+except ImportError:
+    llm_chat = None
+    ai_chat_enabled = False
+    print("Emergent AI Chat is disabled (package not found)")
+
+
+@app.post("/chat")
+async def chat_with_ai(prompt: str = Body(..., embed=True)):
+    if ai_chat_enabled and llm_chat:
+        response = llm_chat.ask(prompt)
+    else:
+        response = "AI chat not available — please configure Emergent."
+    return {"prompt": prompt, "response": response}
+
     
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
