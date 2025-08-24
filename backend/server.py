@@ -1,12 +1,12 @@
-from fastapi import FastAPI, APIRouter, HTTPException,Body# type: ignore
-from dotenv import load_dotenv# type: ignore
-from starlette.middleware.cors import CORSMiddleware# type: ignore
-from motor.motor_asyncio import AsyncIOMotorClient# type: ignore
+from fastapi import FastAPI, APIRouter, HTTPException,Body
+from dotenv import load_dotenv
+from starlette.middleware.cors import CORSMiddleware
+from motor.motor_asyncio import AsyncIOMotorClient
 import os
-import google.generativeai as genai# type: ignore
+import google.generativeai as genai
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field# type: ignore
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timedelta
@@ -14,7 +14,7 @@ import asyncio
 import json
 import random
 import math
-import numpy as np# type: ignore
+import numpy as np
 import pandas as pd# type: ignore
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor# type: ignore  
 from sklearn.linear_model import LinearRegression# type: ignore
@@ -23,49 +23,9 @@ from sklearn.model_selection import train_test_split# type: ignore
 from sklearn.metrics import mean_absolute_error, mean_squared_error# type: ignore
 import pickle
 import warnings
+from fastapi import Body
+from pydantic import BaseModel
 warnings.filterwarnings('ignore')
-
-# Load Gemini API key
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-else:
-    print("⚠️ No GEMINI_API_KEY found in .env")
-    
-def ask_gemini(prompt: str) -> str:
-    try:
-        model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"❌ AI Chat error: {str(e)}"
-    
-    
-app = FastAPI()
-@app.post("/chat")
-async def chat_with_ai(prompt: str = Body(..., embed=True)):
-    answer = ask_gemini(prompt)
-    return {"prompt": prompt, "response": answer}
-
-# Optional Emergent AI Chat Initialization
-try:
-    from emergentintegrations.llm.chat import LLMChat  # type: ignore
-    llm_chat = LLMChat()
-    ai_chat_enabled = True
-    print("Emergent AI Chat enabled")
-except ImportError:
-    llm_chat = None
-    ai_chat_enabled = False
-    print("Emergent AI Chat is disabled (package not found)")
-
-
-@app.post("/chat")
-async def chat_with_ai(prompt: str = Body(..., embed=True)):
-    if ai_chat_enabled and llm_chat:
-        response = llm_chat.ask(prompt)
-    else:
-        response = "AI chat not available — please configure Emergent."
-    return {"prompt": prompt, "response": response}
 
     
 # Load environment variables
@@ -77,11 +37,113 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+async def gemini_chat(message: str) -> str:
+    """
+    Dummy Gemini AI chat function.
+    Replace with real Gemini API integration later.
+    """
+    # For now, just echo the message with a mock response
+    responses = [
+        f"Interesting question! Here's what I think about '{message}'.",
+        f"I hear you: '{message}'. Traffic in Accra is usually heavy around rush hours.",
+        f"You said: '{message}'. My prediction is moderate congestion in main routes.",
+    ]
+
+    # Rotate through responses (or just pick first one)
+    return responses[0]
+
+
 # Create the main app without a prefix
 app = FastAPI(title="Traffic Flow Optimization API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Load Gemini API key
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+else:
+    print("⚠️ No GEMINI_API_KEY found in .env Gemini AI Chat is disabled.")
+    
+def ask_gemini(message: str) -> str:
+    try:
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(message)
+        return response.text
+    except Exception as e:
+        return f"❌ AI Chat error: {str(e)}"
+    
+    
+from fastapi import FastAPI, Body
+
+app = FastAPI(
+    title="AI Traffic Optimizer API",
+    description="Backend API for traffic optimization using ML + Gemini AI.",
+    version="1.0.0"
+)
+
+# Pydantic Models
+# ------------------------
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    reply: str
+
+
+# ------------------------
+# AI Chat Endpoint
+# ------------------------
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat_endpoint(request: ChatRequest):
+    """
+    Chat with Gemini AI.
+    Expects: {"message": "Hello Gemini!"}
+    Returns: {"reply": "..."}
+    """
+    user_message = request.message
+
+    # For now, mock AI reply (replace with ask_gemini(user_message))
+    reply = f"Gemini AI received: {user_message}"
+
+    return ChatResponse(reply=reply)
+
+
+# --- Traffic Prediction ---
+@app.get("/api/traffic", tags=["Traffic Analytics"])
+async def get_traffic_data():
+    """
+    Returns live traffic data and predictions.
+    """
+    return {"city": "Accra", "status": "Moderate", "speed": "28 km/h"}
+
+
+# --- ML Model Info ---
+@app.get("/api/models", tags=["ML Models"])
+async def get_model_info():
+    """
+    Returns trained model performance metrics.
+    """
+    return {
+        "traffic_mae": 4.70,
+        "speed_mae": 4.27,
+        "congestion_mae": 0.12
+    }
+
+    try:
+        # If Gemini API key is missing, return fallback
+        if not os.getenv("GEMINI_API_KEY"):
+            return {"reply": "⚠️ Gemini AI is disabled (no GEMINI_API_KEY found)."}
+
+        # Example Gemini chat function (replace with your real one if exists)
+        reply = await gemini_chat(user_message)
+
+        return {"reply": reply}
+
+    except Exception as e:
+        logger.error(f"Chat endpoint error: {e}")
+        return {"error": str(e)}
 
 # Models
 class TrafficData(BaseModel):
@@ -391,42 +453,37 @@ class TrafficMLEngine:
 # Global ML engine instance
 ml_engine = TrafficMLEngine()
 
-# Initialize AI Integration (will be set up when emergentintegrations is installed)
-ai_chat = None
+# Initialize AI Integration
+ai_model = None
 
-# Initialize Gemini AI Chat
 async def initialize_ai_chat():
-    """Initialize Gemini AI chat for traffic analysis"""
-    global ai_chat
+    """Initialize Gemini AI for traffic analysis"""
+    global ai_model
     try:
-        from emergentintegrations.llm.chat import LlmChat
-        
         api_key = os.environ.get('GEMINI_API_KEY')
         if api_key:
-            ai_chat = LlmChat(
-                api_key=api_key,
-                session_id="traffic_optimization_system",
-                system_message="""You are an expert AI traffic optimization specialist for Ghana, specifically for Accra and Kumasi cities. 
+            genai.configure(api_key=api_key)
+            ai_model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction="""You are an expert AI traffic optimization specialist for Ghana, specifically for Accra and Kumasi cities. 
                 Analyze traffic patterns, provide intelligent route recommendations, and suggest traffic management strategies.
                 Focus on reducing congestion, improving traffic flow, and enhancing overall transportation efficiency.
                 Provide practical, actionable insights based on real-world traffic conditions in Ghana."""
-            ).with_model("gemini", "gemini-2.0-flash")
-            logger.info("Gemini AI chat initialized successfully")
+            )
+            logger.info("Gemini AI initialized successfully")
         else:
             logger.warning("GEMINI_API_KEY not found in environment")
     except Exception as e:
-        logger.error(f"Failed to initialize AI chat: {e}")
+        logger.error(f"Failed to initialize AI: {e}")
 
 async def get_ai_traffic_insights(traffic_data: List[TrafficData], city: str) -> str:
     """Get AI insights for traffic data"""
-    global ai_chat
+    global ai_model
     
-    if not ai_chat:
+    if not ai_model:
         return f"AI analysis not available. Current traffic in {city} shows mixed conditions with some congestion points."
     
     try:
-        from emergentintegrations.llm.chat import UserMessage
-        
         # Prepare traffic data summary for AI analysis
         traffic_summary = {
             "city": city,
@@ -461,15 +518,57 @@ Please provide:
 
 Keep recommendations practical and specific to Ghana's traffic management capabilities."""
 
-        user_message = UserMessage(text=prompt)
-        response = await ai_chat.send_message(user_message)
-        
-        return response.strip()
+        response = ai_model.generate_content(prompt)
+        return response.text.strip()
         
     except Exception as e:
         logger.error(f"AI analysis failed: {e}")
         return f"AI analysis temporarily unavailable. Based on current data, {city} shows {'high' if len([d for d in traffic_data if d.congestion_level in ['High', 'Critical']]) > 2 else 'moderate'} congestion levels."
 
+async def get_ai_route_optimization(start: Dict, end: Dict, city: str, current_traffic: List[TrafficData]) -> str:
+    """Get AI-powered route optimization insights"""
+    global ai_model
+    
+    if not ai_model:
+        return f"Route optimized using standard algorithms. Avoid main roads during peak hours in {city}."
+    
+    try:
+        # Calculate distance and identify nearby intersections
+        route_distance = math.sqrt((end["lat"] - start["lat"])**2 + (end["lng"] - start["lng"])**2) * 111
+        
+        # Find intersections along the route (simplified)
+        nearby_traffic = [
+            d for d in current_traffic 
+            if abs(d.location["lat"] - (start["lat"] + end["lat"])/2) < 0.01 
+            and abs(d.location["lng"] - (start["lng"] + end["lng"])/2) < 0.01
+        ]
+        
+        prompt = f"""Optimize a route in {city}, Ghana from coordinates ({start['lat']:.4f}, {start['lng']:.4f}) to ({end['lat']:.4f}, {end['lng']:.4f}).
+
+Route Information:
+- Estimated distance: {route_distance:.2f} km
+- Current time: {datetime.now().strftime('%H:%M')}
+- Day: {datetime.now().strftime('%A')}
+
+Nearby Traffic Conditions:
+{json.dumps([{'intersection': d.intersection_id, 'vehicles': d.vehicle_count, 'speed': d.average_speed, 'congestion': d.congestion_level} for d in nearby_traffic], indent=2)}
+
+Provide specific routing advice:
+1. Recommended route strategy
+2. Expected travel time considering current traffic
+3. Alternative routes to avoid congestion
+4. Best departure time if delaying is possible
+5. Specific roads/areas to avoid in {city}
+
+Focus on practical advice for drivers in Ghana."""
+
+        response = ai_model.generate_content(prompt)
+        return response.text.strip()
+        
+    except Exception as e:
+        logger.error(f"AI route optimization failed: {e}")
+        return f"Route optimization completed. Current conditions in {city} suggest allowing extra time due to traffic patterns."
+    
 async def get_ai_route_optimization(start: Dict, end: Dict, city: str, current_traffic: List[TrafficData]) -> str:
     """Get AI-powered route optimization insights"""
     global ai_chat

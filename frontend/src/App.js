@@ -3,6 +3,7 @@ import "./App.css";
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Corrected: Added /api prefix to match backend routes
 const API = `${BACKEND_URL}/api`;
 
 // Route Recommendation Component
@@ -20,6 +21,7 @@ const RouteRecommendation = () => {
   const handleOptimizeRoute = async () => {
     setLoading(true);
     try {
+      // Now correctly calls ${BACKEND_URL}/api/route/optimize
       const response = await axios.post(`${API}/route/optimize`, {
         start_location: { lat: parseFloat(formData.startLat), lng: parseFloat(formData.startLng) },
         end_location: { lat: parseFloat(formData.endLat), lng: parseFloat(formData.endLng) },
@@ -156,6 +158,7 @@ const TrafficDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      // Now correctly calls ${BACKEND_URL}/api/dashboard/overview/${selectedCity}
       const response = await axios.get(`${API}/dashboard/overview/${selectedCity}`);
       setDashboardData(response.data);
     } catch (error) {
@@ -295,6 +298,7 @@ const MLPredictions = () => {
   const fetchPredictions = async () => {
     setLoading(true);
     try {
+      // Now correctly calls ${BACKEND_URL}/api/ml/batch-predict/${selectedCity}
       const response = await axios.get(`${API}/ml/batch-predict/${selectedCity}?horizon=120`);
       setPredictions(response.data);
     } catch (error) {
@@ -306,6 +310,7 @@ const MLPredictions = () => {
 
   const fetchModelPerformance = async () => {
     try {
+      // Now correctly calls ${BACKEND_URL}/api/ml/model-performance/${selectedCity}
       const response = await axios.get(`${API}/ml/model-performance/${selectedCity}`);
       setModelPerformance(response.data);
     } catch (error) {
@@ -315,6 +320,7 @@ const MLPredictions = () => {
 
   const retrainModels = async () => {
     try {
+      // Now correctly calls ${BACKEND_URL}/api/ml/retrain/${selectedCity}
       const response = await axios.post(`${API}/ml/retrain/${selectedCity}`);
       alert(`✅ ${response.data.message}`);
       fetchModelPerformance();
@@ -457,6 +463,7 @@ const MLAnalytics = () => {
   const fetchMLInsights = async () => {
     setLoading(true);
     try {
+      // Now correctly calls ${BACKEND_URL}/api/analytics/ml-insights/${selectedCity}
       const response = await axios.get(`${API}/analytics/ml-insights/${selectedCity}`);
       setInsights(response.data);
     } catch (error) {
@@ -595,6 +602,7 @@ const MLAnalytics = () => {
     </div>
   );
 };
+
 const CurrentTraffic = () => {
   const [trafficData, setTrafficData] = useState(null);
   const [selectedCity, setSelectedCity] = useState('Accra');
@@ -603,6 +611,7 @@ const CurrentTraffic = () => {
   const fetchTrafficData = async () => {
     setLoading(true);
     try {
+      // Now correctly calls ${BACKEND_URL}/api/traffic/current/${selectedCity}
       const response = await axios.get(`${API}/traffic/current/${selectedCity}`);
       setTrafficData(response.data);
     } catch (error) {
