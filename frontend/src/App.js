@@ -1,15 +1,20 @@
+
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-// Corrected: Added /api prefix to match backend routes
+// Set a default backend URL if environment variable is missing
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
 const API = `${BACKEND_URL}/api`;
 
-// Route Recommendation Component
+// Add a console log to verify the API URL (remove in production)
+console.log("API Base URL:", API);
+
+// Enhanced RouteRecommendation component with better error handling
 const RouteRecommendation = () => {
   const [routeData, setRouteData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     startLat: '5.5600',
     startLng: '-0.1969',
@@ -20,8 +25,8 @@ const RouteRecommendation = () => {
 
   const handleOptimizeRoute = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Now correctly calls ${BACKEND_URL}/api/route/optimize
       const response = await axios.post(`${API}/route/optimize`, {
         start_location: { lat: parseFloat(formData.startLat), lng: parseFloat(formData.startLng) },
         end_location: { lat: parseFloat(formData.endLat), lng: parseFloat(formData.endLng) },
@@ -31,6 +36,7 @@ const RouteRecommendation = () => {
       setRouteData(response.data);
     } catch (error) {
       console.error('Error optimizing route:', error);
+      setError(error.response?.data?.detail || "Failed to optimize route. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -39,6 +45,13 @@ const RouteRecommendation = () => {
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">🗺️ Smart Route Optimization</h2>
+      
+      {/* Display error message if any */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
@@ -154,15 +167,17 @@ const TrafficDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [selectedCity, setSelectedCity] = useState('Accra');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchDashboardData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Now correctly calls ${BACKEND_URL}/api/dashboard/overview/${selectedCity}
       const response = await axios.get(`${API}/dashboard/overview/${selectedCity}`);
       setDashboardData(response.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setError(error.response?.data?.detail || "Failed to fetch dashboard data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -195,6 +210,20 @@ const TrafficDashboard = () => {
         </div>
       </div>
 
+      {/* Display error message if any */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="loader-spinner"></div>
+          <span className="ml-2">Loading dashboard data...</span>
+        </div>
+      )}
+
       {dashboardData && (
         <>
           {/* Key Metrics */}
@@ -211,6 +240,9 @@ const TrafficDashboard = () => {
               <div className="text-2xl font-bold text-yellow-600">{dashboardData.metrics.active_intersections}</div>
               <div className="text-sm text-gray-600">Active Intersections</div>
             </div>
+I'll continue from where the code was cut off in the TrafficDashboard component:
+
+```jsx
             <div className="bg-red-50 p-4 rounded-lg text-center">
               <div className="text-2xl font-bold text-red-600">{dashboardData.metrics.critical_intersections}</div>
               <div className="text-sm text-gray-600">Critical Points</div>
@@ -294,15 +326,17 @@ const MLPredictions = () => {
   const [selectedCity, setSelectedCity] = useState('Accra');
   const [loading, setLoading] = useState(false);
   const [modelPerformance, setModelPerformance] = useState(null);
+  const [error, setError] = useState(null);
 
   const fetchPredictions = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Now correctly calls ${BACKEND_URL}/api/ml/batch-predict/${selectedCity}
       const response = await axios.get(`${API}/ml/batch-predict/${selectedCity}?horizon=120`);
       setPredictions(response.data);
     } catch (error) {
       console.error('Error fetching ML predictions:', error);
+      setError(error.response?.data?.detail || "Failed to fetch predictions. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -310,7 +344,6 @@ const MLPredictions = () => {
 
   const fetchModelPerformance = async () => {
     try {
-      // Now correctly calls ${BACKEND_URL}/api/ml/model-performance/${selectedCity}
       const response = await axios.get(`${API}/ml/model-performance/${selectedCity}`);
       setModelPerformance(response.data);
     } catch (error) {
@@ -320,7 +353,6 @@ const MLPredictions = () => {
 
   const retrainModels = async () => {
     try {
-      // Now correctly calls ${BACKEND_URL}/api/ml/retrain/${selectedCity}
       const response = await axios.post(`${API}/ml/retrain/${selectedCity}`);
       alert(`✅ ${response.data.message}`);
       fetchModelPerformance();
@@ -364,6 +396,20 @@ const MLPredictions = () => {
         </div>
       </div>
 
+      {/* Display error message if any */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="loader-spinner"></div>
+          <span className="ml-2">Loading predictions...</span>
+        </div>
+      )}
+
       {/* Model Performance Overview */}
       {modelPerformance && (
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -381,6 +427,9 @@ const MLPredictions = () => {
                 {modelPerformance.accuracy_metrics?.traffic_mae ? `${(100 - modelPerformance.accuracy_metrics.traffic_mae).toFixed(1)}%` : 'N/A'}
               </div>
             </div>
+I'll continue from where I left off in the MLPredictions component:
+
+```jsx
             <div className="bg-white p-3 rounded border text-center">
               <div className="text-sm text-gray-600">Speed Accuracy</div>
               <div className="text-lg font-bold text-green-600">
@@ -459,15 +508,17 @@ const MLAnalytics = () => {
   const [insights, setInsights] = useState(null);
   const [selectedCity, setSelectedCity] = useState('Accra');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchMLInsights = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Now correctly calls ${BACKEND_URL}/api/analytics/ml-insights/${selectedCity}
       const response = await axios.get(`${API}/analytics/ml-insights/${selectedCity}`);
       setInsights(response.data);
     } catch (error) {
       console.error('Error fetching ML insights:', error);
+      setError(error.response?.data?.detail || "Failed to fetch analytics. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -499,6 +550,20 @@ const MLAnalytics = () => {
           </button>
         </div>
       </div>
+
+      {/* Display error message if any */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="loader-spinner"></div>
+          <span className="ml-2">Loading analytics...</span>
+        </div>
+      )}
 
       {insights && (
         <>
@@ -603,19 +668,22 @@ const MLAnalytics = () => {
   );
 };
 
+// CurrentTraffic Component
 const CurrentTraffic = () => {
   const [trafficData, setTrafficData] = useState(null);
   const [selectedCity, setSelectedCity] = useState('Accra');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchTrafficData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Now correctly calls ${BACKEND_URL}/api/traffic/current/${selectedCity}
       const response = await axios.get(`${API}/traffic/current/${selectedCity}`);
       setTrafficData(response.data);
     } catch (error) {
       console.error('Error fetching traffic data:', error);
+      setError(error.response?.data?.detail || "Failed to fetch traffic data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -647,6 +715,20 @@ const CurrentTraffic = () => {
           </button>
         </div>
       </div>
+
+      {/* Display error message if any */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="loader-spinner"></div>
+          <span className="ml-2">Loading traffic data...</span>
+        </div>
+      )}
 
       {trafficData && (
         <>
@@ -703,6 +785,23 @@ const CurrentTraffic = () => {
 // Main App Component
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [backendStatus, setBackendStatus] = useState('checking');
+
+  // Check backend connection on component mount
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const response = await axios.get(`${API}/health`);
+        setBackendStatus('connected');
+        console.log('Backend connection successful:', response.data);
+      } catch (error) {
+        setBackendStatus('error');
+        console.error('Backend connection failed:', error);
+      }
+    };
+    
+    checkBackend();
+  }, []);
 
   const tabs = [
     { id: 'dashboard', name: 'Traffic Dashboard', icon: '🚦' },
@@ -714,6 +813,15 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* Backend Status Indicator */}
+      <div className={`fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-semibold z-50 ${
+        backendStatus === 'connected' ? 'bg-green-100 text-green-800' : 
+        backendStatus === 'error' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+      }`}>
+        {backendStatus === 'connected' ? 'Backend Connected' : 
+         backendStatus === 'error' ? 'Backend Error' : 'Checking Backend...'}
+      </div>
+
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -756,6 +864,12 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {backendStatus === 'error' && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            <strong>Connection Error:</strong> Unable to connect to the backend server. Please ensure the server is running at {BACKEND_URL}.
+          </div>
+        )}
+        
         {activeTab === 'dashboard' && <TrafficDashboard />}
         {activeTab === 'route' && <RouteRecommendation />}
         {activeTab === 'ml-predict' && <MLPredictions />}

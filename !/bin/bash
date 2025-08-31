@@ -1,0 +1,7 @@
+# monitor_containers.sh
+while true; do
+    echo "=== $(date) ==="
+    docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.PIDs}}"
+    echo ""
+    sleep 30
+done

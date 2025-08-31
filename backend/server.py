@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -30,7 +31,7 @@ warnings.filterwarnings('ignore')
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / ".env")  # 👈 loads your .env file
+load_dotenv(ROOT_DIR / ".env")
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
@@ -45,10 +46,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware
+# Enhanced CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Your React frontend
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -534,6 +535,10 @@ def generate_ai_insights():
 async def root():
     return {"message": "Traffic Flow Optimization API", "status": "active"}
 
+@api_router.get("/health")
+async def health_check():
+    return {"status": "healthy", "message": "Server is running successfully!"}
+
 @api_router.get("/traffic/current/{city}")
 async def get_current_traffic(city: str):
     """Get current traffic conditions for a city"""
@@ -952,4 +957,14 @@ async def shutdown_db_client():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    
+    try:
+        host = os.environ.get("HOST", "0.0.0.0")
+        port = int(os.environ.get("PORT", 8001))
+        
+        print(f"Starting server on {host}:{port}")
+        uvicorn.run(app, host=host, port=port)
+    except Exception as e:
+        print(f"Failed to start server: {e}")
+        # Optionally, you could fall back to default values
+        uvicorn.run(app, host="0.0.0.0", port=8001)
