@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
 import os
 import google.generativeai as genai
 import logging
@@ -29,7 +30,7 @@ warnings.filterwarnings('ignore')
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
-load_dotenv = lambda: None  # Placeholder for dotenv loading
+load_dotenv(ROOT_DIR / ".env")  # 👈 loads your .env file
 
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
