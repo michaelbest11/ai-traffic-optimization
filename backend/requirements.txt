@@ -24,8 +24,9 @@ python-multipart
 jq
 typer
 scikit-learn
-tensorflow
+tensorflow-cpu
 matplotlib
 seaborn
 google-generativeai
 joblib
+gunicorn

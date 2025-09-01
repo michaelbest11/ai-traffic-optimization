@@ -27,7 +27,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE 8001
 
 # Start the application with better performance settings
-CMD ["gunicorn", "server:app", \
+CMD ["python", "-m", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "server:app", "--bind", "0.0.0.0:8000"],\
      "--workers", "2", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
      "--bind", "0.0.0.0:8001", \
