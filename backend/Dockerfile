@@ -24,13 +24,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/api/health || exit 1
 
 # Expose the port
-EXPOSE 8001
+EXPOSE 8000
 
-# Start the application with better performance settings
-CMD ["python", "-m", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "server:app", "--bind", "0.0.0.0:8000"],\
-     "--workers", "2", \
-     "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--bind", "0.0.0.0:8001", \
-     "--max-requests", "1000", \
-     "--max-requests-jitter", "100", \
-     "--timeout", "120"]
+# Start the application with Gunicorn + Uvicorn workers
+CMD ["gunicorn", "server:app", \
+     "--workers=2", \
+     "--worker-class=uvicorn.workers.UvicornWorker", \
+     "--bind=0.0.0.0:8000", \
+     "--max-requests=1000", \
+     "--max-requests-jitter=100", \
+     "--timeout=120"]
