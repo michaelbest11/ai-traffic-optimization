@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
@@ -240,9 +239,7 @@ const TrafficDashboard = () => {
               <div className="text-2xl font-bold text-yellow-600">{dashboardData.metrics.active_intersections}</div>
               <div className="text-sm text-gray-600">Active Intersections</div>
             </div>
-I'll continue from where the code was cut off in the TrafficDashboard component:
 
-```jsx
             <div className="bg-red-50 p-4 rounded-lg text-center">
               <div className="text-2xl font-bold text-red-600">{dashboardData.metrics.critical_intersections}</div>
               <div className="text-sm text-gray-600">Critical Points</div>
@@ -342,7 +339,7 @@ const MLPredictions = () => {
     }
   };
 
-  const fetchModelPerformance = async () => {
+  const fetchModelPerformance = async ()=> {
     try {
       const response = await axios.get(`${API}/ml/model-performance/${selectedCity}`);
       setModelPerformance(response.data);
@@ -427,9 +424,7 @@ const MLPredictions = () => {
                 {modelPerformance.accuracy_metrics?.traffic_mae ? `${(100 - modelPerformance.accuracy_metrics.traffic_mae).toFixed(1)}%` : 'N/A'}
               </div>
             </div>
-I'll continue from where I left off in the MLPredictions component:
 
-```jsx
             <div className="bg-white p-3 rounded border text-center">
               <div className="text-sm text-gray-600">Speed Accuracy</div>
               <div className="text-lg font-bold text-green-600">
@@ -459,7 +454,7 @@ I'll continue from where I left off in the MLPredictions component:
           <div className="space-y-4">
             {predictions.predictions?.map((prediction, index) => (
               <div key={index} className="border rounded-lg p-4 hover:bg-gray-50">
-                <div className="flex justify-between items-center">
+                <div className="flex justify between items-center">
                   <div>
                     <div className="font-medium">📍 {prediction.intersection_id}</div>
                     <div className="text-sm text-gray-600">
@@ -878,9 +873,11 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-4 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>Made by Michael O. Mantey © 2025 AI/ML Traffic Flow Optimization System • Reducing congestion in Ghana with Machine Learning</p>
+      <footer className="bg-white border-t mt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <p className="text-center text-gray-600">
+            By Michael O. Mantey © 2025 AI/ML Traffic Flow Optimization System • Reducing congestion in Ghana with Machine Learning
+          </p>
         </div>
       </footer>
     </div>

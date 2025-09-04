@@ -446,7 +446,7 @@ def generate_realistic_traffic_data(city: str):
             congestion_multiplier = random.uniform(2.0, 3.5)
             congestion_level = random.choice(["High", "Critical"])
         elif current_hour in [9, 10, 16, 19]:
-            congestion_multiplier = random.uniform(1.3, 2.0)
+            congestion_multplier = random.uniform(1.3, 2.0)
             congestion_level = "Medium"
         else:
             congestion_multiplier = random.uniform(0.5, 1.2)
@@ -544,11 +544,18 @@ async def get_current_traffic(city: str):
     if city not in ["Accra", "Kumasi"]:
         raise HTTPException(status_code=400, detail="City must be 'Accra' or 'Kumasi'")
     
+    traffic_data = generate_realistic_traffic_data(city)
+    total_vehicles = sum(d["vehicle_count"] for d in traffic_data)
+    
     return {
         "city": city,
-        "status": "moderate",
-        "congestion_score": 62,
-        "average_speed": 28.4,
+        "traffic_data": traffic_data,
+        "summary": {
+            "total_vehicles": total_vehicles,
+            "total_intersections": len(traffic_data),
+            "high_congestion": len([d for d in traffic_data if d["congestion_level"] in ["High", "Critical"]]),
+            "average_speed": round(sum(d["average_speed"] for d in traffic_data) / len(traffic_data), 2)
+        },
         "timestamp": datetime.utcnow().isoformat()
     }
 
@@ -557,6 +564,12 @@ async def optimize_route(request: RouteRequest):
     """Get AI-optimized route recommendation"""
     if request.city not in ["Accra", "Kumasi"]:
         raise HTTPException(status_code=400, detail="City must be 'Accra' or 'Kumasi'")
+    
+    route_recommendation = calculate_route_optimization(
+        request.start_location, 
+        request.end_location, 
+        request.city
+    )
     
     return {
         "city": request.city,
@@ -567,8 +580,11 @@ async def optimize_route(request: RouteRequest):
              "lng": (request.start_location["lng"] + request.end_location["lng"]) / 2},
             {"lat": request.end_location["lat"], "lng": request.end_location["lng"]}
         ],
-        "estimated_time_minutes": 34,
-        "distance_km": 12.5,
+        "estimated_time_minutes": route_recommendation["estimated_duration"],
+        "distance_km": route_recommendation["estimated_distance"],
+        "traffic_conditions": route_recommendation["traffic_conditions"],
+        "alternative_routes": route_recommendation["alternative_routes"],
+        "ai_insights": route_recommendation["ai_insights"],
         "departure_time": request.departure_time or datetime.utcnow().isoformat()
     }
 
@@ -578,16 +594,50 @@ async def get_dashboard_overview(city: str):
     if city not in ["Accra", "Kumasi"]:
         raise HTTPException(status_code=400, detail="City must be 'Accra' or 'Kumasi'")
     
+    # Get current traffic data
+    traffic_data = generate_realistic_traffic_data(city)
+    
+    # Calculate metrics
+    total_vehicles = sum(d["vehicle_count"] for d in traffic_data)
+    avg_speed = sum(d["average_speed"] for d in traffic_data) / len(traffic_data)
+    critical_intersections = [d for d in traffic_data if d["congestion_level"] == "Critical"]
+    high_congestion = [d for d in traffic_data if d["congestion_level"] in ["High", "Critical"]]
+    
+    # AI recommendations based on analysis
+    ai_recommendations = []
+    if len(critical_intersections) > 0:
+        ai_recommendations.append("🚨 Deploy traffic controllers to critical intersections immediately")
+        ai_recommendations.append("📢 Issue traffic alerts via radio and mobile apps")
+    
+    if avg_speed < 20:
+        ai_recommendations.append("🚦 Implement dynamic signal timing optimization")
+        ai_recommendations.append("🚌 Increase public transport frequency to reduce private vehicle load")
+    
+    if len(high_congestion) > 3:
+        ai_recommendations.append("🔄 Activate alternative route guidance systems")
+        ai_recommendations.append("👮 Consider manual traffic direction at hotspots")
+    
+    if not ai_recommendations:
+        ai_recommendations.append("✅ Traffic flow is optimal. Maintain current monitoring.")
+    
     return {
         "city": city,
-        "total_intersections": 152,
-        "congested": 38,
-        "smooth": 90,
-        "moderate": 24,
+        "metrics": {
+            "total_vehicles": total_vehicles,
+            "average_speed": round(avg_speed, 2),
+            "total_intersections": len(traffic_data),
+            "congested": len(high_congestion),
+            "smooth": len([d for d in traffic_data if d["congestion_level"] == "Low"]),
+            "moderate": len([d for d in traffic_data if d["congestion_level"] == "Medium"]),
+            "critical_intersections": len(critical_intersections)
+        },
         "alerts": [
-            {"location": "Kwame Nkrumah Circle", "severity": "High"},
-            {"location": "Kumasi Central Market", "severity": "Moderate"}
+            {
+                "location": d["intersection_id"],
+                "severity": "Critical" if d["congestion_level"] == "Critical" else "High"
+            } for d in critical_intersections
         ],
+        "ai_recommendations": ai_recommendations,
         "updated_at": datetime.utcnow().isoformat()
     }
 
