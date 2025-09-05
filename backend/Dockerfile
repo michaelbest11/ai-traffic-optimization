@@ -16,21 +16,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create models directory
-RUN mkdir -p models
+# Create models directory and set proper permissions
+RUN mkdir -p models && chmod -R 755 models
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/api/health || exit 1
+# Fix permissions for clang package files
+RUN find /usr/local/lib/python3.9/site-packages -name "*.dll" -exec chmod 755 {} \; || true
 
-# Expose the port
 EXPOSE 8000
 
-# Start the application with Gunicorn + Uvicorn workers
-CMD ["gunicorn", "server:app", \
-     "--workers=2", \
-     "--worker-class=uvicorn.workers.UvicornWorker", \
-     "--bind=0.0.0.0:8000", \
-     "--max-requests=1000", \
-     "--max-requests-jitter=100", \
-     "--timeout=120"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
