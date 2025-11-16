@@ -3,7 +3,7 @@ import "./App.css";
 import axios from "axios";
 
 // Set a default backend URL if environment variable is missing
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 const API = `${BACKEND_URL}/api`;
 
 // Add a console log to verify the API URL (remove in production)
