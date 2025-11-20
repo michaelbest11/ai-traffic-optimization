@@ -1,4 +1,4 @@
-import { kumasiIntersections } from "./dataset/kumasiIntersections";
+import { kumasiIntersections } from "./kumasiIntersections";
 
 function generateMockRoute(start, end, numAlternatives = 2) {
   const colors = ["#2e7d32", "#ff9800", "#1976d2"];

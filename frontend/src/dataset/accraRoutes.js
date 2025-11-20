@@ -1,4 +1,4 @@
-import { accraIntersections } from "./data/accraIntersections";
+import { accraIntersections } from "./accraIntersections";
 
 // helper
 function generateMockRoute(start, end, numAlternatives = 2) {
