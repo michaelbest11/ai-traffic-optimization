@@ -1,62 +1,84 @@
-import React from "react";
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import React, { useMemo } from "react";
+import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
 
-// Helper to convert intersections into LatLng array
-const getLatLngs = (routeIds, intersections) => {
-  return routeIds.map((id) => {
-    const inter = intersections.find((i) => i.id === id);
-    return inter ? [inter.lat, inter.lng] : null;
-  }).filter(Boolean);
+/*
+  Props:
+    - apiKey
+    - intersections: [{id,name,lat,lng,feed}]
+    - routes: [{start,end,alternatives:[{id,route:[{lat,lng}],color,trafficLevel,liveImage}]}]
+    - selectedRoute, onSelectRoute
+*/
+
+const containerStyle = {
+  width: "100%",
+  height: "420px",
+  borderRadius: 8,
+  overflow: "hidden",
 };
 
-function MapView({ selectedRoute, intersections }) {
-  if (!selectedRoute) return null;
+export default function MapView({ apiKey, intersections = [], routes = [], selectedRoute, onSelectRoute }) {
+  const center = useMemo(() => {
+    if (intersections.length > 0) {
+      return { lat: intersections[0].lat, lng: intersections[0].lng };
+    }
+    return { lat: 5.6037, lng: -0.1870 };
+  }, [intersections]);
 
   return (
-    <div>
-      <MapContainer center={[6.67, -1.62]} zoom={12} className="leaflet-container">
-        <TileLayer
-          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {selectedRoute.map((alt) => {
-          const latlngs = getLatLngs(alt.route, intersections);
-          return (
-            <Polyline
-              key={alt.id}
-              positions={latlngs}
-              color={alt.color || "blue"}
-              weight={5}
+    <div className="map-card">
+      <h3>Map</h3>
+      <LoadScript googleMapsApiKey={apiKey || ""}>
+        <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={12}>
+          {/* Markers */}
+          {intersections.map((i) => (
+            <Marker
+              key={i.id}
+              position={{ lat: i.lat, lng: i.lng }}
+              title={i.name}
+              onClick={() => window.alert(`${i.name}\nLat: ${i.lat}\nLng: ${i.lng}`)}
             />
-          );
-        })}
+          ))}
 
-        {selectedRoute.map((alt) =>
-          alt.route.map((rid) => {
-            const inter = intersections.find((i) => i.id === rid);
-            if (!inter) return null;
-            return (
-              <Marker key={inter.id} position={[inter.lat, inter.lng]}>
-                <Popup>
-                  <strong>{inter.name}</strong>
-                  <br />
-                  {inter.feed.endsWith(".mp4") ? (
-                    <video width="160" height="120" controls>
-                      <source src={inter.feed} type="video/mp4" />
-                    </video>
-                  ) : (
-                    <img src={inter.feed} alt={inter.name} width="160" height="120" />
-                  )}
-                </Popup>
-              </Marker>
-            );
-          })
-        )}
-      </MapContainer>
+          {/* Show the selected route polyline(s) */}
+          {selectedRoute &&
+            selectedRoute.alternatives?.map((alt, idx) => (
+              <Polyline
+                key={alt.id || idx}
+                path={alt.route.map((p) => ({ lat: p.lat, lng: p.lng }))}
+                options={{
+                  strokeColor: alt.color || (idx % 2 === 0 ? "#1976d2" : "#2e7d32"),
+                  strokeOpacity: 0.9,
+                  strokeWeight: idx === 0 ? 5 : 3,
+                }}
+              />
+            ))}
+        </GoogleMap>
+      </LoadScript>
+
+      {/* Quick route chooser */}
+      <div className="map-actions">
+        <label>
+          Quick select route:
+          <select
+            onChange={(e) => {
+              const idx = Number(e.target.value);
+              if (!isNaN(idx) && routes[idx]) onSelectRoute(routes[idx]);
+            }}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Choose...
+            </option>
+            {routes.map((r, i) => (
+              <option key={i} value={i}>
+                {r.start} → {r.end}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     </div>
   );
 }
 
-export default MapView;
+
