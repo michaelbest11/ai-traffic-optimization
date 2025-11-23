@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.7",
-    "axios": "^1.13.2"
+    "axios": "^1.13.2",
+    "hls.js": "^1.6.15"
   }
 }

@@ -26,6 +26,8 @@ import joblib
 import pickle
 import time
 import warnings
+import subprocess
+from fastapi.responses import FileResponse
 warnings.filterwarnings('ignore')
 
 # Load environment variables
@@ -38,12 +40,49 @@ client = AsyncIOMotorClient(mongo_url)
 db_name = os.environ.get('DB_NAME', 'traffic_db')
 db = client[db_name]
 
-# Create the main app
+STREAM_DIR = ROOT_DIR / "streams"
+STREAM_DIR.mkdir(exist_ok=True)
+
+# Load camera list
+with open(ROOT_DIR / "cams.json") as f:
+    cameras = json.load(f)
+
+# Function to start FFmpeg HLS streams (non-blocking)
+def start_hls_stream(cam):
+    cam_id = cam['id']
+    rtsp_url = cam['rtsp_url']
+    output_path = STREAM_DIR / f"{cam_id}.m3u8"
+
+    # Skip if already exists
+    if output_path.exists():
+        return
+
+    cmd = [
+        "ffmpeg",
+        "-i", rtsp_url,
+        "-c:v", "copy",
+        "-c:a", "aac",
+        "-f", "hls",
+        "-hls_time", "2",
+        "-hls_list_size", "3",
+        "-hls_flags", "delete_segments",
+        str(output_path)
+    ]
+    subprocess.Popen(cmd)
+
+# Create the main app first
 app = FastAPI(
     title="AI Traffic Optimizer API",
     description="Backend API for traffic optimization using ML + Gemini AI.",
     version="1.0.0"
 )
+
+# Then define startup event
+@app.on_event("startup")
+async def start_all_camera_streams():
+    for cam in cameras:
+        start_hls_stream(cam)
+
 
 # Enhanced CORS configuration
 app.add_middleware(
@@ -742,6 +781,13 @@ async def get_model_info():
         ],
         "last_updated": datetime.utcnow().isoformat()
     }
+@api_router.get("/streams/{cam_id}.m3u8")
+async def get_stream(cam_id: str):
+    file_path = STREAM_DIR / f"{cam_id}.m3u8"
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Stream not found")
+    return FileResponse(file_path)
+
 
 # Include the router in the main app
 app.include_router(api_router)

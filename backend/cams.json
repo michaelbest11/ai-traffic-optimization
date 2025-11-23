@@ -1,0 +1,12 @@
+[
+  {
+    "id": "cam1",
+    "name": "37 Military Hospital Junction",
+    "rtsp_url": "rtsp://username:password@192.168.1.100:554/stream"
+  },
+  {
+    "id": "cam2",
+    "name": "Kwame Nkrumah Circle",
+    "rtsp_url": "rtsp://username:password@192.168.1.101:554/stream"
+  }
+]
