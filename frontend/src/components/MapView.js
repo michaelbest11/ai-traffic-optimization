@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
@@ -38,7 +39,6 @@ return (
     );  
   })}  
 
-  {/* Optional: show route start/end markers */}  
   {selectedRoute && selectedRoute.path && selectedRoute.path.length > 0 && (  
     <>  
       <Marker position={[selectedRoute.path[0].lat, selectedRoute.path[0].lng]}>  
@@ -53,6 +53,31 @@ return (
 
 
 );
+};
+
+MapView.propTypes = {
+selectedCity: PropTypes.string.isRequired,
+routes: PropTypes.arrayOf(
+PropTypes.shape({
+id: PropTypes.string.isRequired,
+path: PropTypes.arrayOf(
+PropTypes.shape({
+lat: PropTypes.number.isRequired,
+lng: PropTypes.number.isRequired,
+})
+),
+})
+).isRequired,
+selectedRoute: PropTypes.shape({
+id: PropTypes.string,
+path: PropTypes.arrayOf(
+PropTypes.shape({
+lat: PropTypes.number,
+lng: PropTypes.number,
+})
+),
+}),
+onSelectRoute: PropTypes.func,
 };
 
 export default MapView;
