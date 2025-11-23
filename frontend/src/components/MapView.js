@@ -1,79 +1,58 @@
-import React, { useMemo } from "react";
-import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
+import React from "react";
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
 
-const containerStyle = {
-  width: "100%",
-  height: "420px",
-  borderRadius: 8,
-  overflow: "hidden",
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+iconRetinaUrl: "[https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png](https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png)",
+iconUrl: "[https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png](https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png)",
+shadowUrl: "[https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png](https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png)",
+});
+
+const toLatLngs = (path) => (path || []).map((p) => [p.lat, p.lng]);
+
+const MapView = ({ selectedCity, routes, selectedRoute, onSelectRoute }) => {
+const mapCenter = selectedCity === "Accra" ? [5.558, -0.1969] : [6.6892, -1.6230];
+
+return (
+<MapContainer center={mapCenter} zoom={13} style={{ height: "600px", width: "100%" }}> <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+```
+  {routes.map((route) => {  
+    const pathCoords = toLatLngs(route.path);  
+    if (!pathCoords.length) return null;  
+    const isSelected = selectedRoute && selectedRoute.id === route.id;  
+
+    return (  
+      <Polyline  
+        key={route.id}  
+        positions={pathCoords}  
+        color={isSelected ? "blue" : "red"}  
+        weight={isSelected ? 5 : 3}  
+        eventHandlers={{  
+          click: () => {  
+            if (onSelectRoute) onSelectRoute(route);  
+          },  
+        }}  
+      />  
+    );  
+  })}  
+
+  {/* Optional: show route start/end markers */}  
+  {selectedRoute && selectedRoute.path && selectedRoute.path.length > 0 && (  
+    <>  
+      <Marker position={[selectedRoute.path[0].lat, selectedRoute.path[0].lng]}>  
+        <Popup>Start</Popup>  
+      </Marker>  
+      <Marker position={[selectedRoute.path[selectedRoute.path.length - 1].lat, selectedRoute.path[selectedRoute.path.length - 1].lng]}>  
+        <Popup>End</Popup>  
+      </Marker>  
+    </>  
+  )}  
+</MapContainer>  
+
+
+);
 };
 
-export default function MapView({
-  apiKey,
-  intersections = [],
-  routes = [],
-  selectedRoute,
-  onSelectRoute,
-}) {
-  const center = useMemo(() => {
-    if (intersections.length > 0) {
-      return { lat: intersections[0].lat, lng: intersections[0].lng };
-    }
-    return { lat: 5.6037, lng: -0.1870 };
-  }, [intersections]);
-
-  return (
-    <div className="map-card">
-      <h3>Map</h3>
-      <LoadScript googleMapsApiKey={apiKey || ""}>
-        <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={12}>
-          {/* Markers */}
-          {intersections.map((i) => (
-            <Marker
-              key={i.id}
-              position={{ lat: i.lat, lng: i.lng }}
-              title={i.name}
-              onClick={() => window.alert(`${i.name}\nLat: ${i.lat}\nLng: ${i.lng}`)}
-            />
-          ))}
-
-          {/* Selected route polyline(s) */}
-          {selectedRoute?.alternatives?.map((alt, idx) => (
-            <Polyline
-              key={alt.id || idx}
-              path={alt.route.map((p) => ({ lat: p.lat, lng: p.lng }))}
-              options={{
-                strokeColor: alt.color || (idx % 2 === 0 ? "#1976d2" : "#2e7d32"),
-                strokeOpacity: 0.9,
-                strokeWeight: idx === 0 ? 5 : 3,
-              }}
-            />
-          ))}
-        </GoogleMap>
-      </LoadScript>
-
-      {/* Quick route selector */}
-      <div className="map-actions">
-        <label>
-          Quick select route:
-          <select
-            onChange={(e) => {
-              const idx = Number(e.target.value);
-              if (!isNaN(idx) && routes[idx]) onSelectRoute?.(routes[idx]);
-            }}
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Choose...
-            </option>
-            {routes.map((r, i) => (
-              <option key={i} value={i}>
-                {r.start} → {r.end}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-    </div>
-  );
-}
+export default MapView;
