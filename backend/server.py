@@ -28,6 +28,7 @@ import time
 import warnings
 import subprocess
 from fastapi.responses import FileResponse
+from pathlib import Path
 warnings.filterwarnings('ignore')
 
 # Load environment variables
@@ -43,6 +44,33 @@ db = client[db_name]
 STREAM_DIR = ROOT_DIR / "streams"
 STREAM_DIR.mkdir(exist_ok=True)
 
+def start_hls_stream(cam):
+    if "source_rtsp" not in cam:
+        print(f"No RTSP source for camera {cam['id']}")
+        return
+
+    # Path to ffmpeg.exe
+    ffmpeg_path = r"C:\ffmpeg\bin\ffmpeg.exe"
+
+    # HLS output folder
+    output_dir = Path(f"hls/{cam['id']}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # ffmpeg command
+    cmd = [
+        ffmpeg_path,
+        "-i", cam["source_rtsp"],
+        "-c:v", "copy",
+        "-f", "hls",
+        "-hls_time", "2",
+        "-hls_list_size", "5",
+        str(output_dir / "index.m3u8")
+    ]
+
+    subprocess.Popen(cmd)
+    print(f"Started HLS stream for camera {cam['id']}")
+
+
 # Load camera list
 with open(ROOT_DIR / "cams.json") as f:
     cameras = json.load(f)
@@ -50,7 +78,7 @@ with open(ROOT_DIR / "cams.json") as f:
 # Function to start FFmpeg HLS streams (non-blocking)
 def start_hls_stream(cam):
     cam_id = cam['id']
-    rtsp_url = cam['rtsp_url']
+    rtsp_url = cam['source_rtsp']
     output_path = STREAM_DIR / f"{cam_id}.m3u8"
 
     # Skip if already exists
@@ -833,6 +861,19 @@ async def startup_db_client():
     
     # Start background loading (non-blocking)
     asyncio.create_task(load_models_background())
+    
+# List of cameras (replace with your cameras list)
+cameras = [
+    {"id": "accra_cam_1", "source_rtsp": "rtsp://user:pass@10.0.0.10:554/stream"},
+    {"id": "kumasi_cam_2", "source_rtsp": "rtsp://user:pass@10.0.1.10:554/stream"},
+    # add more cameras...
+]
+
+@app.on_event("startup")
+async def start_all_camera_streams():
+    for cam in cameras:
+        start_hls_stream(cam)
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
