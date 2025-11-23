@@ -1,14 +1,6 @@
 import React, { useMemo } from "react";
 import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
 
-/*
-  Props:
-    - apiKey
-    - intersections: [{id,name,lat,lng,feed}]
-    - routes: [{start,end,alternatives:[{id,route:[{lat,lng}],color,trafficLevel,liveImage}]}]
-    - selectedRoute, onSelectRoute
-*/
-
 const containerStyle = {
   width: "100%",
   height: "420px",
@@ -16,7 +8,13 @@ const containerStyle = {
   overflow: "hidden",
 };
 
-export default function MapView({ apiKey, intersections = [], routes = [], selectedRoute, onSelectRoute }) {
+export default function MapView({
+  apiKey,
+  intersections = [],
+  routes = [],
+  selectedRoute,
+  onSelectRoute,
+}) {
   const center = useMemo(() => {
     if (intersections.length > 0) {
       return { lat: intersections[0].lat, lng: intersections[0].lng };
@@ -39,30 +37,29 @@ export default function MapView({ apiKey, intersections = [], routes = [], selec
             />
           ))}
 
-          {/* Show the selected route polyline(s) */}
-          {selectedRoute &&
-            selectedRoute.alternatives?.map((alt, idx) => (
-              <Polyline
-                key={alt.id || idx}
-                path={alt.route.map((p) => ({ lat: p.lat, lng: p.lng }))}
-                options={{
-                  strokeColor: alt.color || (idx % 2 === 0 ? "#1976d2" : "#2e7d32"),
-                  strokeOpacity: 0.9,
-                  strokeWeight: idx === 0 ? 5 : 3,
-                }}
-              />
-            ))}
+          {/* Selected route polyline(s) */}
+          {selectedRoute?.alternatives?.map((alt, idx) => (
+            <Polyline
+              key={alt.id || idx}
+              path={alt.route.map((p) => ({ lat: p.lat, lng: p.lng }))}
+              options={{
+                strokeColor: alt.color || (idx % 2 === 0 ? "#1976d2" : "#2e7d32"),
+                strokeOpacity: 0.9,
+                strokeWeight: idx === 0 ? 5 : 3,
+              }}
+            />
+          ))}
         </GoogleMap>
       </LoadScript>
 
-      {/* Quick route chooser */}
+      {/* Quick route selector */}
       <div className="map-actions">
         <label>
           Quick select route:
           <select
             onChange={(e) => {
               const idx = Number(e.target.value);
-              if (!isNaN(idx) && routes[idx]) onSelectRoute(routes[idx]);
+              if (!isNaN(idx) && routes[idx]) onSelectRoute?.(routes[idx]);
             }}
             defaultValue=""
           >
@@ -80,5 +77,3 @@ export default function MapView({ apiKey, intersections = [], routes = [], selec
     </div>
   );
 }
-
-
