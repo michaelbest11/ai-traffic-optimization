@@ -76,6 +76,7 @@ return ( <div className="min-h-screen bg-gray-100"> <header className="bg-white 
 
 
   <main className="max-w-7xl mx-auto p-4 grid grid-cols-3 gap-4">
+    {/* Left panel: routes and AI recommendations */}
     <div className="col-span-1 space-y-4">
       <RouteRecommendation
         city={selectedCity}
@@ -92,6 +93,7 @@ return ( <div className="min-h-screen bg-gray-100"> <header className="bg-white 
       />
     </div>
 
+    {/* Map panel */}
     <div className="col-span-2 bg-white rounded shadow p-2">
       <MapContainer
         center={mapInitialCenter}
@@ -104,30 +106,40 @@ return ( <div className="min-h-screen bg-gray-100"> <header className="bg-white 
 
         {/* Draw AI route */}
         {aiRouteCoords?.length > 0 && (
-          <Polyline
-            positions={toLatLngs(aiRouteCoords)}
-            pathOptions={{ color: "red", weight: 4 }}
-          />
+          <Polyline positions={toLatLngs(aiRouteCoords)} pathOptions={{ color: "red", weight: 4 }} />
         )}
 
-        {/* Show cameras as markers */}
+        {/* Show city cameras */}
         {camerasForCity.map((cam) => (
           <Marker key={cam.id} position={cam.coords}>
             <Popup>
-              <strong>{cam.title}</strong><br />
-              <button onClick={() => setLiveSelectedCamera(cam)}>View Feed</button>
+              <strong>{cam.title}</strong>
+              <br />
+              {cam.type === "mp4" && (
+                <video width="200" controls>
+                  <source src={cam.url} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              )}
+              {cam.type === "hls" && (
+                <div>
+                  <button onClick={() => setLiveSelectedCamera(cam)}>View HLS Feed</button>
+                </div>
+              )}
             </Popup>
           </Marker>
         ))}
       </MapContainer>
     </div>
 
+    {/* Live feed panel */}
     {liveSelectedCamera && (
       <div className="col-span-3 mt-4">
         <LiveFeed camera={liveSelectedCamera} />
       </div>
     )}
 
+    {/* Traffic stats panel */}
     <div className="col-span-3 mt-4">
       <TrafficStats />
     </div>
