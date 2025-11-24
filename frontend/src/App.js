@@ -17,7 +17,10 @@ L.Icon.Default.mergeOptions({
 // Set a default backend URL if environment variable is missing
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 
-// Map component to fit bounds
+// =============================================
+// Map Components
+// =============================================
+
 const FitBounds = ({ latlngs }) => {
   const map = useMap();
   React.useEffect(() => {
@@ -36,7 +39,6 @@ FitBounds.propTypes = {
   latlngs: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number))
 };
 
-// Map View Component
 const MapView = ({ selectedCity, routes, selectedRoute, aiRoute }) => {
   const mapInitialCenter = selectedCity === "Accra" ? [5.558, -0.1969] : [6.6892, -1.6230];
   
@@ -99,7 +101,10 @@ MapView.defaultProps = {
   aiRoute: null
 };
 
-// RouteRecommendation component
+// =============================================
+// Main Application Components
+// =============================================
+
 const RouteRecommendation = () => {
   const [routeData, setRouteData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -136,7 +141,6 @@ const RouteRecommendation = () => {
     setLoading(false);
   };
 
-  // Sample routes for map display
   const sampleRoutes = [
     {
       id: 1,
@@ -221,7 +225,6 @@ const RouteRecommendation = () => {
         )}
       </div>
 
-      {/* Map Display */}
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-semibold mb-4">Route Map</h3>
         <MapView 
@@ -234,7 +237,6 @@ const RouteRecommendation = () => {
   );
 };
 
-// Traffic Dashboard Component
 const TrafficDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [selectedCity, setSelectedCity] = useState('Accra');
@@ -245,7 +247,6 @@ const TrafficDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const mockData = {
@@ -267,13 +268,6 @@ const TrafficDashboard = () => {
             congestion_level: "Critical",
             vehicle_count: 125,
             average_speed: 12.3
-          },
-          {
-            intersection_id: "KUM_001", 
-            location: { lat: 6.6885, lng: -1.6244 },
-            congestion_level: "High",
-            vehicle_count: 98,
-            average_speed: 15.7
           }
         ],
         ai_recommendations: [
@@ -325,7 +319,6 @@ const TrafficDashboard = () => {
         </div>
       </div>
 
-      {/* Display error message if any */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           {error}
@@ -341,7 +334,6 @@ const TrafficDashboard = () => {
 
       {dashboardData && (
         <>
-          {/* Key Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="bg-blue-50 p-4 rounded-lg text-center">
               <div className="text-2xl font-bold text-blue-600">{dashboardData.metrics.total_vehicles}</div>
@@ -355,7 +347,6 @@ const TrafficDashboard = () => {
               <div className="text-2xl font-bold text-yellow-600">{dashboardData.metrics.total_intersections}</div>
               <div className="text-sm text-gray-600">Active Intersections</div>
             </div>
-
             <div className="bg-red-50 p-4 rounded-lg text-center">
               <div className="text-2xl font-bold text-red-600">{dashboardData.metrics.critical_intersections}</div>
               <div className="text-sm text-gray-600">Critical Points</div>
@@ -366,7 +357,6 @@ const TrafficDashboard = () => {
             </div>
           </div>
 
-          {/* Congestion Hotspots */}
           {dashboardData.hotspots && dashboardData.hotspots.length > 0 && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-3">🔥 Congestion Hotspots</h3>
@@ -394,7 +384,6 @@ const TrafficDashboard = () => {
             </div>
           )}
 
-          {/* AI Recommendations */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3">🤖 AI Traffic Recommendations</h3>
             <div className="bg-blue-50 rounded-lg p-4">
@@ -409,7 +398,6 @@ const TrafficDashboard = () => {
             </div>
           </div>
 
-          {/* Predictions */}
           <div>
             <h3 className="text-lg font-semibold mb-3">📊 AI Traffic Predictions</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -433,7 +421,6 @@ const TrafficDashboard = () => {
   );
 };
 
-// ML Predictions Component
 const MLPredictions = () => {
   const [predictions, setPredictions] = useState(null);
   const [selectedCity, setSelectedCity] = useState('Accra');
@@ -445,7 +432,6 @@ const MLPredictions = () => {
     setLoading(true);
     setError(null);
     try {
-      // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const mockData = {
@@ -459,24 +445,6 @@ const MLPredictions = () => {
             predicted_vehicle_count: 85,
             predicted_speed: 18.5,
             confidence_score: 0.87,
-            ml_model_used: "GradientBoosting + RandomForest"
-          },
-          {
-            intersection_id: "ACC_002",
-            prediction_horizon: 120,
-            predicted_congestion: "Critical",
-            predicted_vehicle_count: 120,
-            predicted_speed: 12.3,
-            confidence_score: 0.92,
-            ml_model_used: "GradientBoosting + RandomForest"
-          },
-          {
-            intersection_id: "ACC_003",
-            prediction_horizon: 120,
-            predicted_congestion: "Medium",
-            predicted_vehicle_count: 65,
-            predicted_speed: 25.7,
-            confidence_score: 0.78,
             ml_model_used: "GradientBoosting + RandomForest"
           }
         ],
@@ -499,7 +467,6 @@ const MLPredictions = () => {
 
   const fetchModelPerformance = async () => {
     try {
-      // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const mockData = {
@@ -525,7 +492,6 @@ const MLPredictions = () => {
 
   const retrainModels = async () => {
     try {
-      // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 1500));
       alert("✅ Models retrained successfully!");
       fetchModelPerformance();
@@ -569,7 +535,6 @@ const MLPredictions = () => {
         </div>
       </div>
 
-      {/* Display error message if any */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           {error}
@@ -583,7 +548,6 @@ const MLPredictions = () => {
         </div>
       )}
 
-      {/* Model Performance Overview */}
       {modelPerformance && (
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
           <h3 className="text-lg font-semibold mb-3">🎯 ML Model Performance</h3>
@@ -600,7 +564,6 @@ const MLPredictions = () => {
                 {modelPerformance.accuracy_metrics?.traffic_mae ? `${(100 - modelPerformance.accuracy_metrics.traffic_mae).toFixed(1)}%` : 'N/A'}
               </div>
             </div>
-
             <div className="bg-white p-3 rounded border text-center">
               <div className="text-sm text-gray-600">Speed Accuracy</div>
               <div className="text-lg font-bold text-green-600">
@@ -617,7 +580,6 @@ const MLPredictions = () => {
         </div>
       )}
 
-      {/* ML Predictions */}
       {predictions && (
         <div>
           <div className="flex justify-between items-center mb-4">
@@ -674,7 +636,6 @@ const MLPredictions = () => {
   );
 };
 
-// Advanced ML Analytics Component
 const MLAnalytics = () => {
   const [insights, setInsights] = useState(null);
   const [selectedCity, setSelectedCity] = useState('Accra');
@@ -685,7 +646,6 @@ const MLAnalytics = () => {
     setLoading(true);
     setError(null);
     try {
-      // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const mockData = {
@@ -698,56 +658,6 @@ const MLAnalytics = () => {
                 intersection_id: "ACC_001",
                 predicted_congestion: "High",
                 confidence: 0.85
-              },
-              {
-                intersection_id: "ACC_002",
-                predicted_congestion: "Critical",
-                confidence: 0.92
-              }
-            ]
-          },
-          {
-            hour_ahead: 2,
-            predictions: [
-              {
-                intersection_id: "ACC_001",
-                predicted_congestion: "Medium",
-                confidence: 0.78
-              },
-              {
-                intersection_id: "ACC_002",
-                predicted_congestion: "High",
-                confidence: 0.82
-              }
-            ]
-          },
-          {
-            hour_ahead: 3,
-            predictions: [
-              {
-                intersection_id: "ACC_001",
-                predicted_congestion: "Low",
-                confidence: 0.75
-              },
-              {
-                intersection_id: "ACC_002",
-                predicted_congestion: "Medium",
-                confidence: 0.79
-              }
-            ]
-          },
-          {
-            hour_ahead: 4,
-            predictions: [
-              {
-                intersection_id: "ACC_001",
-                predicted_congestion: "Low",
-                confidence: 0.72
-              },
-              {
-                intersection_id: "ACC_002",
-                predicted_congestion: "Low",
-                confidence: 0.68
               }
             ]
           }
@@ -811,7 +721,6 @@ const MLAnalytics = () => {
         </div>
       </div>
 
-      {/* Display error message if any */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           {error}
@@ -827,7 +736,6 @@ const MLAnalytics = () => {
 
       {insights && (
         <>
-          {/* Hourly Predictions */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3">⏰ 4-Hour Forecast</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -857,7 +765,6 @@ const MLAnalytics = () => {
             </div>
           </div>
 
-          {/* Pattern Analysis */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3">🔍 AI Pattern Analysis</h3>
             <div className="bg-blue-50 rounded-lg p-4">
@@ -881,7 +788,6 @@ const MLAnalytics = () => {
             </div>
           </div>
 
-          {/* Optimization Opportunities */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3">⚡ ML Optimization Opportunities</h3>
             <div className="space-y-3">
@@ -902,7 +808,6 @@ const MLAnalytics = () => {
             </div>
           </div>
 
-          {/* Model Reliability */}
           <div>
             <h3 className="text-lg font-semibold mb-3">🎯 Model Reliability</h3>
             <div className="bg-gray-50 rounded-lg p-4">
@@ -928,7 +833,6 @@ const MLAnalytics = () => {
   );
 };
 
-// CurrentTraffic Component
 const CurrentTraffic = () => {
   const [trafficData, setTrafficData] = useState(null);
   const [selectedCity, setSelectedCity] = useState('Accra');
@@ -939,7 +843,6 @@ const CurrentTraffic = () => {
     setLoading(true);
     setError(null);
     try {
-      // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const mockData = {
@@ -951,38 +854,6 @@ const CurrentTraffic = () => {
             vehicle_count: 75,
             average_speed: 25.4,
             congestion_level: "Medium",
-            weather_condition: "Clear"
-          },
-          {
-            intersection_id: "ACC_002",
-            location: { lat: 5.5566, lng: -0.1969 },
-            vehicle_count: 120,
-            average_speed: 12.8,
-            congestion_level: "Critical",
-            weather_condition: "Clear"
-          },
-          {
-            intersection_id: "ACC_003",
-            location: { lat: 5.5593, lng: -0.2532 },
-            vehicle_count: 65,
-            average_speed: 28.7,
-            congestion_level: "Low",
-            weather_condition: "Clear"
-          },
-          {
-            intersection_id: "ACC_004",
-            location: { lat: 5.6037, lng: -0.2267 },
-            vehicle_count: 85,
-            average_speed: 22.3,
-            congestion_level: "Medium",
-            weather_condition: "Clear"
-          },
-          {
-            intersection_id: "ACC_005",
-            location: { lat: 5.5500, lng: -0.1969 },
-            vehicle_count: 95,
-            average_speed: 19.6,
-            congestion_level: "High",
             weather_condition: "Clear"
           }
         ],
@@ -1030,7 +901,6 @@ const CurrentTraffic = () => {
         </div>
       </div>
 
-      {/* Display error message if any */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
           {error}
@@ -1096,17 +966,18 @@ const CurrentTraffic = () => {
   );
 };
 
-// Main App Component
+// =============================================
+// Main App Component (SINGLE EXPORT DEFAULT)
+// =============================================
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [backendStatus, setBackendStatus] = useState('checking');
 
-  // Check backend connection on component mount
   useEffect(() => {
     const checkBackend = async () => {
       try {
         await axios.get(`${BACKEND_URL}/health`).catch(() => {
-          // If health endpoint doesn't exist, try the API root
           return axios.get(`${BACKEND_URL}/`);
         });
         setBackendStatus('connected');
@@ -1129,7 +1000,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Backend Status Indicator */}
       <div className={`fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-semibold z-50 ${
         backendStatus === 'connected' ? 'bg-green-100 text-green-800' : 
         backendStatus === 'mock' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
@@ -1138,7 +1008,6 @@ function App() {
          backendStatus === 'mock' ? 'Using Mock Data' : 'Checking Backend...'}
       </div>
 
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -1157,7 +1026,6 @@ function App() {
         </div>
       </header>
 
-      {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
@@ -1178,7 +1046,6 @@ function App() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {backendStatus === 'error' && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
@@ -1193,7 +1060,6 @@ function App() {
         {activeTab === 'live' && <CurrentTraffic />}
       </main>
 
-      {/* Footer */}
       <footer className="bg-white border-t mt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <p className="text-center text-gray-600">
@@ -1205,4 +1071,5 @@ function App() {
   );
 }
 
+// SINGLE EXPORT DEFAULT - This is the only export default in the file
 export default App;
