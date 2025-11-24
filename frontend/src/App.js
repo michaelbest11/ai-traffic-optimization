@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
 import { accraRoutes } from "./dataset/accraRoutes";
@@ -9,7 +9,7 @@ import { kumasiRoutes } from "./dataset/kumasiRoutes";
 
 import LiveFeed from "./components/LiveFeed";
 import TrafficStats from "./components/TrafficStats";
-import { RouteList, RouteRecommendation, FitBounds } from "./components/RouteComponents";
+import { RouteList, RouteRecommendation, FitBounds, toLatLngs } from "./components/RouteComponents";
 
 // Leaflet default icon fix
 delete L.Icon.Default.prototype._getIconUrl;
@@ -22,9 +22,7 @@ shadowUrl:
 "[https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png](https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png)",
 });
 
-// Helpers
-const toLatLngs = (path) => (path || []).map((p) => [p.lat, p.lng]);
-
+// Camera catalog
 const cameraCatalog = {
 Accra: [
 { id: "accra_cam_1", title: "Ring Rd HLS", type: "hls", url: "http://localhost:8000/hls/accra_cam_1/index.m3u8", thumbnail: "/videos/thumbs/accra_cam_1.jpg", coords: [5.5600, -0.1969] },
@@ -43,32 +41,27 @@ const [aiRouteCoords, setAiRouteCoords] = useState(null);
 const [mapLatLngsForFit, setMapLatLngsForFit] = useState(null);
 const [liveSelectedCamera, setLiveSelectedCamera] = useState(null);
 const mapRef = useRef(null);
-const [activeTab, setActiveTab] = useState("dashboard");
 
 const camerasForCity = cameraCatalog[selectedCity] || [];
 
-// Update city routes
+// Update routes safely when city changes
 useEffect(() => {
 const cityRoutes = selectedCity === "Accra" ? accraRoutes : kumasiRoutes;
-setRoutes(cityRoutes);
+setRoutes(cityRoutes || []);
 setSelectedRouteId(null);
 setAiRouteCoords(null);
-const allCoords = cityRoutes.flatMap((r) => toLatLngs(r.path || []));
+const allCoords = cityRoutes.flatMap((r) => toLatLngs(r.path));
 setMapLatLngsForFit(allCoords.length ? allCoords : null);
 }, [selectedCity]);
 
-// Update map bounds when route or AI route changes
+// Update map bounds safely when route or AI route changes
 useEffect(() => {
-if (aiRouteCoords && aiRouteCoords.length) {
-setMapLatLngsForFit(aiRouteCoords.map((p) => [p.lat, p.lng]));
-setSelectedRouteId(null);
-} else if (selectedRouteId) {
-const r = routes.find((x) => x.id === selectedRouteId);
-if (r) setMapLatLngsForFit(toLatLngs(r.path || []));
-} else {
-const allCoords = routes.flatMap((r) => toLatLngs(r.path || []));
-setMapLatLngsForFit(allCoords.length ? allCoords : null);
-}
+const latlngs = aiRouteCoords?.length
+? toLatLngs(aiRouteCoords)
+: selectedRouteId
+? toLatLngs(routes.find((r) => r.id === selectedRouteId)?.path)
+: routes.flatMap((r) => toLatLngs(r.path));
+setMapLatLngsForFit(latlngs.length ? latlngs : null);
 }, [selectedRouteId, aiRouteCoords, routes]);
 
 const handleRouteSelect = (id) => {
@@ -82,68 +75,62 @@ return ( <div className="min-h-screen bg-gray-100"> <header className="bg-white 
 <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} className="px-2 py-1 border rounded"> <option>Accra</option> <option>Kumasi</option> </select> </div> </div> </header>
 
 
-  <nav className="bg-white shadow-sm">
-    <div className="max-w-7xl mx-auto px-4">
-      <div className="flex gap-6">
-        {[
-          { id: "dashboard", name: "Dashboard", icon: "🚦" },
-          { id: "route", name: "Route Optimization", icon: "🗺️" },
-          { id: "ml-predict", name: "Predictions", icon: "🤖" },
-          { id: "ml-analytics", name: "Analytics", icon: "📊" },
-          { id: "live", name: "Live Traffic", icon: "📍" },
-        ].map((t) => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)} className={`py-3 px-2 ${activeTab === t.id ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-600"}`}>
-            {t.icon} {t.name}
-          </button>
-        ))}
-      </div>
+  <main className="max-w-7xl mx-auto p-4 grid grid-cols-3 gap-4">
+    <div className="col-span-1 space-y-4">
+      <RouteRecommendation
+        city={selectedCity}
+        cameras={camerasForCity}
+        onRouteGenerated={setAiRouteCoords}
+        onCameraSelect={setLiveSelectedCamera}
+      />
+      <RouteList
+        routes={routes}
+        selectedRouteId={selectedRouteId}
+        onSelectRoute={handleRouteSelect}
+        cameras={camerasForCity}
+        onCameraSelect={setLiveSelectedCamera}
+      />
     </div>
-  </nav>
 
-  <main className="max-w-7xl mx-auto p-4">
-    {activeTab === "dashboard" && (
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="md:col-span-2 bg-white p-4 rounded shadow">
-          <h2 className="font-semibold">Traffic Overview — {selectedCity}</h2>
-          <MapContainer center={mapInitialCenter} zoom={13} style={{ height: 400, width: "100%" }} whenCreated={(m) => (mapRef.current = m)}>
-            <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {mapLatLngsForFit && <FitBounds latlngs={mapLatLngsForFit} />}
-          </MapContainer>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="font-semibold">Live Cameras</h3>
-          <LiveFeed selectedCity={selectedCity} cameras={camerasForCity} selectedCamera={liveSelectedCamera} onSelectCamera={(cam) => setLiveSelectedCamera(cam)} />
-          <div className="mt-4">
-            <TrafficStats selectedCity={selectedCity} />
-          </div>
-        </div>
-      </div>
-    )}
+    <div className="col-span-2 bg-white rounded shadow p-2">
+      <MapContainer
+        center={mapInitialCenter}
+        zoom={13}
+        style={{ height: "600px", width: "100%" }}
+        whenCreated={(map) => (mapRef.current = map)}
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {mapLatLngsForFit && <FitBounds latlngs={mapLatLngsForFit} mapRef={mapRef} />}
 
-    {activeTab === "route" && (
-      <div className="grid lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-1">
-          <RouteRecommendation
-            city={selectedCity}
-            cameras={camerasForCity}
-            onRouteGenerated={(coords) => setAiRouteCoords(coords)}
-            onCameraSelect={(cam) => setLiveSelectedCamera(cam)}
+        {/* Draw AI route */}
+        {aiRouteCoords?.length > 0 && (
+          <Polyline
+            positions={toLatLngs(aiRouteCoords)}
+            pathOptions={{ color: "red", weight: 4 }}
           />
-          <div className="bg-white p-2 rounded shadow">
-            <h4 className="font-semibold">City Routes</h4>
-            <RouteList routes={routes} selectedRouteId={selectedRouteId} onSelectRoute={handleRouteSelect} cameras={camerasForCity} onCameraSelect={(cam) => setLiveSelectedCamera(cam)} />
-          </div>
-        </div>
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded shadow overflow-hidden" style={{ height: 640 }}>
-            <MapContainer center={mapInitialCenter} zoom={13} style={{ height: "100%", width: "100%" }} whenCreated={(m) => (mapRef.current = m)}>
-              <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {mapLatLngsForFit && <FitBounds latlngs={mapLatLngsForFit} />}
-            </MapContainer>
-          </div>
-        </div>
+        )}
+
+        {/* Show cameras as markers */}
+        {camerasForCity.map((cam) => (
+          <Marker key={cam.id} position={cam.coords}>
+            <Popup>
+              <strong>{cam.title}</strong><br />
+              <button onClick={() => setLiveSelectedCamera(cam)}>View Feed</button>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+
+    {liveSelectedCamera && (
+      <div className="col-span-3 mt-4">
+        <LiveFeed camera={liveSelectedCamera} />
       </div>
     )}
+
+    <div className="col-span-3 mt-4">
+      <TrafficStats />
+    </div>
   </main>
 </div>
 
