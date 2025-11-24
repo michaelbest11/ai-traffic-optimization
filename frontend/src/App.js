@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
@@ -35,38 +35,30 @@ Kumasi: [
 
 function App() {
 const [selectedCity, setSelectedCity] = useState("Accra");
-const [routes, setRoutes] = useState(accraRoutes);
 const [selectedRouteId, setSelectedRouteId] = useState(null);
 const [aiRouteCoords, setAiRouteCoords] = useState(null);
-const [mapLatLngsForFit, setMapLatLngsForFit] = useState(null);
 const [liveSelectedCamera, setLiveSelectedCamera] = useState(null);
 const mapRef = useRef(null);
 
-const camerasForCity = cameraCatalog[selectedCity] || [];
+// Get routes based on city
+const routes = useMemo(() => selectedCity === "Accra" ? accraRoutes : kumasiRoutes, [selectedCity]);
 
-// Update routes safely when city changes
-useEffect(() => {
-const cityRoutes = selectedCity === "Accra" ? accraRoutes : kumasiRoutes;
-setRoutes(cityRoutes || []);
-setSelectedRouteId(null);
-setAiRouteCoords(null);
-const allCoords = cityRoutes.flatMap((r) => toLatLngs(r.path));
-setMapLatLngsForFit(allCoords.length ? allCoords : null);
-}, [selectedCity]);
+const camerasForCity = useMemo(() => cameraCatalog[selectedCity] || [], [selectedCity]);
 
-// Update map bounds safely when route or AI route changes
-useEffect(() => {
-const latlngs = aiRouteCoords?.length
-? toLatLngs(aiRouteCoords)
-: selectedRouteId
-? toLatLngs(routes.find((r) => r.id === selectedRouteId)?.path)
-: routes.flatMap((r) => toLatLngs(r.path));
-setMapLatLngsForFit(latlngs.length ? latlngs : null);
-}, [selectedRouteId, aiRouteCoords, routes]);
+// Compute lat/lngs for FitBounds safely
+const mapLatLngsForFit = useMemo(() => {
+if (aiRouteCoords?.length) return toLatLngs(aiRouteCoords);
+if (selectedRouteId) {
+const route = routes.find((r) => r.id === selectedRouteId);
+return route ? toLatLngs(route.path) : [];
+}
+return routes.flatMap((r) => toLatLngs(r.path));
+}, [aiRouteCoords, selectedRouteId, routes]);
 
 const handleRouteSelect = (id) => {
 if (selectedRouteId === id) setSelectedRouteId(null);
-else { setSelectedRouteId(id); setAiRouteCoords(null); }
+else setSelectedRouteId(id);
+setAiRouteCoords(null);
 };
 
 const mapInitialCenter = selectedCity === "Accra" ? [5.558, -0.1969] : [6.6892, -1.6230];
@@ -76,7 +68,6 @@ return ( <div className="min-h-screen bg-gray-100"> <header className="bg-white 
 
 
   <main className="max-w-7xl mx-auto p-4 grid grid-cols-3 gap-4">
-    {/* Left panel: routes and AI recommendations */}
     <div className="col-span-1 space-y-4">
       <RouteRecommendation
         city={selectedCity}
@@ -93,7 +84,6 @@ return ( <div className="min-h-screen bg-gray-100"> <header className="bg-white 
       />
     </div>
 
-    {/* Map panel */}
     <div className="col-span-2 bg-white rounded shadow p-2">
       <MapContainer
         center={mapInitialCenter}
@@ -102,14 +92,10 @@ return ( <div className="min-h-screen bg-gray-100"> <header className="bg-white 
         whenCreated={(map) => (mapRef.current = map)}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {mapLatLngsForFit && <FitBounds latlngs={mapLatLngsForFit} mapRef={mapRef} />}
+        {mapLatLngsForFit.length > 0 && <FitBounds latlngs={mapLatLngsForFit} mapRef={mapRef} />}
 
-        {/* Draw AI route */}
-        {aiRouteCoords?.length > 0 && (
-          <Polyline positions={toLatLngs(aiRouteCoords)} pathOptions={{ color: "red", weight: 4 }} />
-        )}
+        {aiRouteCoords?.length > 0 && <Polyline positions={toLatLngs(aiRouteCoords)} pathOptions={{ color: "red", weight: 4 }} />}
 
-        {/* Show city cameras */}
         {camerasForCity.map((cam) => (
           <Marker key={cam.id} position={cam.coords}>
             <Popup>
@@ -132,14 +118,12 @@ return ( <div className="min-h-screen bg-gray-100"> <header className="bg-white 
       </MapContainer>
     </div>
 
-    {/* Live feed panel */}
     {liveSelectedCamera && (
       <div className="col-span-3 mt-4">
         <LiveFeed camera={liveSelectedCamera} />
       </div>
     )}
 
-    {/* Traffic stats panel */}
     <div className="col-span-3 mt-4">
       <TrafficStats />
     </div>
