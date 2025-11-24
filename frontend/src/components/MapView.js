@@ -1,83 +1,41 @@
 import React from "react";
-import PropTypes from "prop-types";
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-iconRetinaUrl: "[https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png](https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png)",
-iconUrl: "[https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png](https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png)",
-shadowUrl: "[https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png](https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png)",
-});
 
 const toLatLngs = (path) => (path || []).map((p) => [p.lat, p.lng]);
 
-const MapView = ({ selectedCity, routes, selectedRoute, onSelectRoute }) => {
-const mapCenter = selectedCity === "Accra" ? [5.558, -0.1969] : [6.6892, -1.6230];
-
-return (
-<MapContainer center={mapCenter} zoom={13} style={{ height: "600px", width: "100%" }}> <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-```
-  {routes.map((route) => {  
-    const pathCoords = toLatLngs(route.path);  
-    if (!pathCoords.length) return null;  
-    const isSelected = selectedRoute && selectedRoute.id === route.id;  
-
-    return (  
-      <Polyline  
-        key={route.id}  
-        positions={pathCoords}  
-        color={isSelected ? "blue" : "red"}  
-        weight={isSelected ? 5 : 3}  
-        eventHandlers={{  
-          click: () => {  
-            if (onSelectRoute) onSelectRoute(route);  
-          },  
-        }}  
-      />  
-    );  
-  })}  
-
-  {selectedRoute && selectedRoute.path && selectedRoute.path.length > 0 && (  
-    <>  
-      <Marker position={[selectedRoute.path[0].lat, selectedRoute.path[0].lng]}>  
-        <Popup>Start</Popup>  
-      </Marker>  
-      <Marker position={[selectedRoute.path[selectedRoute.path.length - 1].lat, selectedRoute.path[selectedRoute.path.length - 1].lng]}>  
-        <Popup>End</Popup>  
-      </Marker>  
-    </>  
-  )}  
-</MapContainer>  
-
-
-);
+const FitBounds = ({ latlngs }) => {
+const map = useMap();
+React.useEffect(() => {
+if (!map || !latlngs || !latlngs.length) return;
+try {
+const bounds = L.latLngBounds(latlngs);
+map.fitBounds(bounds, { padding: [40, 40] });
+} catch {}
+}, [map, latlngs]);
+return null;
 };
 
-MapView.propTypes = {
-selectedCity: PropTypes.string.isRequired,
-routes: PropTypes.arrayOf(
-PropTypes.shape({
-id: PropTypes.string.isRequired,
-path: PropTypes.arrayOf(
-PropTypes.shape({
-lat: PropTypes.number.isRequired,
-lng: PropTypes.number.isRequired,
-})
-),
-})
-).isRequired,
-selectedRoute: PropTypes.shape({
-id: PropTypes.string,
-path: PropTypes.arrayOf(
-PropTypes.shape({
-lat: PropTypes.number,
-lng: PropTypes.number,
-})
-),
-}),
-onSelectRoute: PropTypes.func,
+const MapView = ({ selectedCity, routes = [], selectedRoute, aiRoute }) => {
+const mapInitialCenter = selectedCity === "Accra" ? [5.558, -0.1969] : [6.6892, -1.6230];
+const latlngsForFit = selectedRoute
+? toLatLngs(selectedRoute.path)
+: aiRoute
+? aiRoute.map((p) => [p.lat, p.lng])
+: routes.flatMap((r) => toLatLngs(r.path || []));
+
+return ( <div className="w-full h-[600px] rounded">
+<MapContainer center={mapInitialCenter} zoom={13} style={{ height: "100%", width: "100%" }}> <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+{latlngsForFit && <FitBounds latlngs={latlngsForFit} />}
+{selectedRoute && ( <Polyline positions={toLatLngs(selectedRoute.path)} color="red" />
+)}
+{aiRoute && <Polyline positions={aiRoute.map((p) => [p.lat, p.lng])} color="blue" />}
+{routes.map((r) =>
+r.path.map((p, idx) => (
+<Marker key={`${r.id}-${idx}`} position={[p.lat, p.lng]}> <Popup>{r.name || `Route ${r.id}`}</Popup> </Marker>
+))
+)} </MapContainer> </div>
+);
 };
 
 export default MapView;
