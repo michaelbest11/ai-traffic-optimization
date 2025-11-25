@@ -27,7 +27,7 @@ import pickle
 import time
 import warnings
 import subprocess
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 warnings.filterwarnings('ignore')
 
@@ -873,6 +873,33 @@ cameras = [
 async def start_all_camera_streams():
     for cam in cameras:
         start_hls_stream(cam)
+        
+@app.get("/")
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "AI Traffic Optimization API",
+        "status": "running",
+        "version": "1.0.0",
+        "endpoints": {
+            "health": "/health",
+            "docs": "/docs",
+            "traffic_analysis": "/api/v1/analyze-traffic"
+        }
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "timestamp": datetime.utcnow().isoformat(),
+            "service": "AI Traffic Optimization",
+            "version": "1.0.0"
+        }
+    )
 
 
 @app.on_event("shutdown")
