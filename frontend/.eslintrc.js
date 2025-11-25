@@ -1,8 +1,0 @@
-module.exports = {
-  plugins: ["react-hooks"],
-  extends: [
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended"
-  ]
-};

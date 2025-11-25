@@ -86,11 +86,6 @@
 .app-footer { text-align:center; margin-top:18px; color:#6b7280; }
 
 /* ========== NEW MAP & CAMERA STYLES ========== */
-/* Tailwind Directives - Add these for the new components */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Custom styles for new features */
 .loader-spinner {
   border: 4px solid #f3f3f3;

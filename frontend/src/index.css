@@ -1,69 +1,17 @@
-/* --------------------------------------------
-   LEAFLET STYLES (MUST BE FIRST)
---------------------------------------------- */
-
-/* Correct Leaflet CSS import */
-@import url("https://unpkg.com/leaflet/dist/leaflet.css");
-
-/* Ensure map renders properly */
-.leaflet-container {
-  width: 100%;
-  height: 500px;   /* default height */
-}
-
-/* Optional full-screen map area */
-#map {
-  width: 100%;
-  height: 100vh;
-}
-
-/* --------------------------------------------
-   TAILWIND
---------------------------------------------- */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* --------------------------------------------
-   GLOBAL BODY STYLES
---------------------------------------------- */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-    "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Code font */
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-}
-
-/* --------------------------------------------
-   LOG PANEL STYLING
---------------------------------------------- */
-.logs-panel {
-  overflow-y: auto;
-  font-family: 'Fira Code', monospace;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  background-color: #ffffff;
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  border: 1px solid #d1d5db;
-}
-
-.logs-panel div:nth-child(odd) {
-  background-color: #f9fafb;
-}
-
-/* --------------------------------------------
-   HEADER BUTTON HOVER
---------------------------------------------- */
-.header-button:hover {
-  background-color: #f3f4f6;
-  transition: background 0.2s;
 }
