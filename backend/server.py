@@ -27,6 +27,7 @@ import pickle
 import time
 import warnings
 import subprocess
+from fastapi import FastAPI, Response
 from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 warnings.filterwarnings('ignore')
@@ -104,6 +105,9 @@ app = FastAPI(
     description="Backend API for traffic optimization using ML + Gemini AI.",
     version="1.0.0"
 )
+@app.head("/")
+def health():
+    return Response(status_code=200)
 
 # Then define startup event
 @app.on_event("startup")
