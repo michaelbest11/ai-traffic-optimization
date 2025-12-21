@@ -1,22 +1,21 @@
-export const kumasiIntersections = [
-  { id: "K1", name: "Kejetia", lat: 6.6929, lng: -1.6244, feed: "/feed/kumasi/kumasi_cam1.jpg" },
-  { id: "K2", name: "Asokwa", lat: 6.7031, lng: -1.5997, feed: "/feed/kumasi/kumasi_cam2.jpg" },
-  { id: "K3", name: "Kumasi Central", lat: 6.6885, lng: -1.6244, feed: "/feed/kumasi/kumasi_cam3.jpg" },
-  { id: "K4", name: "Manhyia", lat: 6.6700, lng: -1.6168, feed: "/feed/kumasi/kumasi_cam4.jpg" },
-  { id: "K5", name: "Tafo", lat: 6.7400, lng: -1.5670, feed: "/feed/kumasi/kumasi_cam5.jpg" },
-  { id: "K6", name: "Asafo", lat: 6.6844, lng: -1.6206, feed: "/feed/kumasi/kumasi_cam6.jpg" },
-  { id: "K7", name: "Suame", lat: 6.7080, lng: -1.6244, feed: "/feed/kumasi/kumasi_cam7.jpg" },
-  { id: "K8", name: "KNUST Junction", lat: 6.6784, lng: -1.5711, feed: "/feed/kumasi/kumasi_cam8.jpg" },
-  { id: "K9", name: "Adum", lat: 6.6900, lng: -1.6240, feed: "/feed/kumasi/kumasi_cam9.jpg" },
-  { id: "K10", name: "Okomfo Anokye", lat: 6.6901, lng: -1.6272, feed: "/feed/kumasi/kumasi_cam10.jpg" },
-  { id: "K11", name: "Tafo Nhyiaso", lat: 6.7374, lng: -1.5491, feed: "/feed/kumasi/kumasi_cam11.jpg" },
-  { id: "K12", name: "Santasi", lat: 6.6754, lng: -1.6251, feed: "/feed/kumasi/kumasi_cam12.jpg" },
-  { id: "K13", name: "Bekwai Road", lat: 6.6450, lng: -1.6170, feed: "/feed/kumasi/kumasi_cam13.jpg" },
-  { id: "K14", name: "Atonsu", lat: 6.7150, lng: -1.5880, feed: "/feed/kumasi/kumasi_cam14.jpg" },
-  { id: "K15", name: "Asafo Market", lat: 6.6849, lng: -1.6229, feed: "/feed/kumasi/kumasi_cam15.jpg" },
-  { id: "K16", name: "Fante New Town", lat: 6.7100, lng: -1.6010, feed: "/feed/kumasi/kumasi_cam16.jpg" },
-  { id: "K17", name: "Kotei", lat: 6.6840, lng: -1.5700, feed: "/feed/kumasi/kumasi_cam17.jpg" },
-  { id: "K18", name: "Suame Magazine", lat: 6.7060, lng: -1.6120, feed: "/feed/kumasi/kumasi_cam18.jpg" },
-  { id: "K19", name: "Odwomase", lat: 6.7000, lng: -1.6200, feed: "/feed/kumasi/kumasi_cam19.jpg" },
-  { id: "K20", name: "Bodwesango", lat: 6.7200, lng: -1.6400, feed: "/feed/kumasi/kumasi_cam20.jpg" },
-];
+// src/dataset/kumasiIntersections.js
+
+function generateKumasiIntersections(count = 1500) {
+  const baseLat = 6.6885;
+  const baseLng = -1.6244;
+
+  return Array.from({ length: count }, (_, i) => ({
+    id: `KUM_INT_${i + 1}`,
+    name: `Kumasi Intersection ${i + 1}`,
+    lat: baseLat + (Math.random() - 0.5) * 0.22,
+    lng: baseLng + (Math.random() - 0.5) * 0.22,
+    traffic_level: ["Low", "Medium", "High", "Critical"][
+      Math.floor(Math.random() * 4)
+    ],
+    average_speed: Number((12 + Math.random() * 35).toFixed(1)),
+    vehicle_count: Math.floor(15 + Math.random() * 400),
+    signalized: Math.random() > 0.35,
+  }));
+}
+
+export const kumasiIntersections = generateKumasiIntersections();
