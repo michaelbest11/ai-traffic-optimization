@@ -1,5 +1,3 @@
-import { accraIntersections } from "./accraIntersections";
-
 // src/dataset/accraRoutes.js
 
 function randomPoint() {

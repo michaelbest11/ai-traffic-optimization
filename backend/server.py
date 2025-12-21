@@ -1,10 +1,10 @@
+import logging
 from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 import os
-import google.generativeai as genai
-import logging
+import google.genai as genai
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
