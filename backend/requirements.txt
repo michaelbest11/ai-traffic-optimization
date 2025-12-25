@@ -30,3 +30,4 @@ seaborn
 google-generativeai
 joblib
 gunicorn
+ffmpeg-python
